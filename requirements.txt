@@ -1,6 +1,8 @@
 setuptools
+pyyaml
 flask
 flask_restful
+flask_cors
 argparse
 requests
 SQLAlchemy

@@ -1,0 +1,8 @@
+flask:
+  secret_key: "your_secure_key_here"
+  secure_cookie: True
+
+database:
+  db: 
+  user: 
+  pass: 
