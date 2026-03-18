@@ -1,3 +1,4 @@
+import datetime
 from sqlalchemy import (
     Integer,
     String,
@@ -5,6 +6,7 @@ from sqlalchemy import (
     ForeignKey,
     Text,
     JSON,
+    DateTime
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
@@ -16,6 +18,15 @@ class Team(Base):
     owner: Mapped[int] = mapped_column(Integer, nullable=False)
     data: Mapped[dict] = mapped_column(JSON, nullable=False, default={})
     applications = relationship("Application", back_populates="team_rel")
+    members = relationship("TeamMember", back_populates="team_member_rel")
+
+class TeamMember(Base):
+    __tablename__ = "team_member"
+    user_id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    team: Mapped[int] = mapped_column(
+        Integer, ForeignKey("team.id"), nullable=False
+    )
+    team_member_rel = relationship("Team", back_populates="members")
 
 class Application(Base):
     __tablename__ = "application"
@@ -55,3 +66,23 @@ class Registration(Base):
     endpoint: Mapped[str] = mapped_column(String(500), unique=True, nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     webhook_rel = relationship("Webhook", back_populates="registrations")
+
+class WebhookLog(Base):
+    __tablename__ = "webhook_logs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    webhook_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("webhook.id"), nullable=False
+    )
+    registration_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("registration.id"), nullable=False
+    )
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    response_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    response_body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    success: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    timestamp: Mapped[datetime.datetime] = mapped_column(
+        DateTime, default=datetime.datetime.utcnow
+    )
+    webhook = relationship("Webhook")
+    registration = relationship("Registration")
