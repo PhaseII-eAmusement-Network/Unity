@@ -1,0 +1,8 @@
+setuptools
+flask
+flask_restful
+argparse
+requests
+SQLAlchemy
+psycopg2-binary
+alembic
