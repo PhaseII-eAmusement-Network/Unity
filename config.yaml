@@ -2,7 +2,14 @@ flask:
   secret_key: "your_secure_key_here"
   secure_cookie: True
 
+crypto:
+  cookie_key: "your_cookie_key_here"
+
 database:
   db: 
   user: 
   pass: 
+  
+restfulsleep:
+  server: 'http://localhost:2581'
+  psk: 'restfulsleep_security_key'

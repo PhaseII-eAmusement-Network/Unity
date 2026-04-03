@@ -86,3 +86,12 @@ class WebhookLog(Base):
     )
     webhook = relationship("Webhook")
     registration = relationship("Registration")
+
+class Session(Base):
+    __tablename__ = "session"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    session_token: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    access_token: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    data: Mapped[dict] = mapped_column(JSON, nullable=False, default={})
+    expiration: Mapped[int] = mapped_column(Integer, nullable=False)

@@ -6,8 +6,12 @@ import argparse
 import yaml
 
 from api.data.connection import SQLConnection
+from api.data.endpoints.session import UserSession
 
-from api.services.test import TestEndpoint
+from api.services.auth import OAuthCallback, AuthSession
+from api.services.user import UserAccount
+
+from external.restfulsleep import RestfulSleepAPI
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -19,13 +23,15 @@ app.config.update(
 api = Api(app)
 config: Dict[str, Any] = {}
 
-uri_prefix = '/api/v1'
+uri_prefix = '/v1'
 
 @app.route('/')
 def root():
     return "Unity is running!"
 
-api.add_resource(TestEndpoint, f'{uri_prefix}/test')
+api.add_resource(OAuthCallback, f'{uri_prefix}/oauth/callback')
+api.add_resource(AuthSession, f'{uri_prefix}/auth/session')
+api.add_resource(UserAccount, f'{uri_prefix}/user')
 
 def load_configs(filename: str) -> None:
     global config
@@ -45,6 +51,9 @@ def load_configs(filename: str) -> None:
 
     config_map = {
         'database': SQLConnection.update_config,
+        'restfulsleep': RestfulSleepAPI.update_config,
+        'flask': UserSession.update_config,
+        'crypto': UserSession.update_crypto_config,
     }
 
     for key, updater in config_map.items():
