@@ -2,7 +2,7 @@ from flask import request
 from typing import Tuple
 from api.constants import APIConstants, ValidatedDict
 from api.data.endpoints.session import UserSession
-# from api.data.endpoints.user import UserData
+from external.restfulsleep import RestfulSleepAPI
 
 class RequestPreCheck:
     def get_session() -> Tuple[bool, ValidatedDict]:
@@ -16,17 +16,18 @@ class RequestPreCheck:
         session['token'] = token
         return (True, session)
     
-    # def checkAdmin(session: ValidatedDict) -> Tuple[bool, ValidatedDict]:
-    #     '''
-    #     Check if a user is an admin. Returns a bool and a response dict.
-    #     '''
-    #     userId = session.get('id', 0)
-    #     user = UserData.getUser(userId)
+    def check_admin(session: ValidatedDict) -> Tuple[bool, ValidatedDict]:
+        '''
+        Check if a user is an admin. Returns a bool and a response dict.
+        '''
+        state, user = RestfulSleepAPI.get_user_from_token(session.get_str('access_token'))
+        if not state:
+            return user
 
-    #     if not user.get("admin", False):
-    #         return (False, APIConstants.badEnd('You must have administrative rights.'))
+        if not user.get_bool("admin", False):
+            return (False, APIConstants.badEnd('You must have administrative rights.'))
         
-    #     return (True, None)
+        return (True, None)
     
     def checkData(keys: dict[str, type] = {}) -> Tuple[bool, ValidatedDict]:
         '''

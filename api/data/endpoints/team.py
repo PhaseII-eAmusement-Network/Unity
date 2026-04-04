@@ -3,10 +3,13 @@ from api.data.connection import SQLConnection
 from database.models.types import Team
 
 class TeamData:
-    def get_all_teams() -> List[Team]:
+    def get_all_teams(owner_id: int = None) -> List[Team]:
         with SQLConnection.SessionLocal() as session:
-            data = session.query(Team).all()
+            query = session.query(Team)
+            if owner_id != None:
+                query = query.filter(Team.owner == owner_id)
 
+            data = query.all()
             teams = []
             for team in data:
                 teams.append({
@@ -17,7 +20,22 @@ class TeamData:
                 })
             return teams
         
-    def new_team(name: str, owner: int, data: dict) -> bool:
+    def get_team(team_id: int) -> dict:
+        with SQLConnection.SessionLocal() as session:
+            query = session.query(Team).filter(Team.id == team_id)
+
+            data = query.first()
+            team = None
+            if data:
+                team = {
+                    'id': data.id,
+                    'name': data.name,
+                    'owner': data.owner,
+                    'data': data.data
+                }
+            return team
+        
+    def new_team(name: str, owner: int, data: dict) -> int:
         with SQLConnection.SessionLocal() as session:
             try:
                 team = Team()
@@ -27,8 +45,24 @@ class TeamData:
 
                 session.add(team)
                 session.commit()
-                return True
+                return team.id
 
             except Exception as e:
+                session.rollback()
+                return None
+            
+    def update_team(team_id: int, name: str, team_data: dict) -> bool:
+        with SQLConnection.SessionLocal() as session:
+            query = session.query(Team).filter(Team.id == team_id)
+            data = query.first()
+            if not data:
+                return False
+            
+            try:
+                data.name = name
+                data.data = team_data
+                session.commit()
+                return True
+            except:
                 session.rollback()
                 return False

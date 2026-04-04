@@ -10,6 +10,9 @@ from api.data.endpoints.session import UserSession
 
 from api.services.auth import OAuthCallback, AuthSession
 from api.services.user import UserAccount
+from api.services.team import Team, NewTeam
+from api.services.team_member import TeamMember
+from api.services.application import Application
 
 from external.restfulsleep import RestfulSleepAPI
 
@@ -32,6 +35,10 @@ def root():
 api.add_resource(OAuthCallback, f'{uri_prefix}/oauth/callback')
 api.add_resource(AuthSession, f'{uri_prefix}/auth/session')
 api.add_resource(UserAccount, f'{uri_prefix}/user')
+api.add_resource(Team, f'{uri_prefix}/team/<team_id>')
+api.add_resource(NewTeam, f'{uri_prefix}/team')
+api.add_resource(TeamMember, f'{uri_prefix}/team/<team_id>/member')
+api.add_resource(Application, f'{uri_prefix}/team/<team_id>/application/<app_id>')
 
 def load_configs(filename: str) -> None:
     global config

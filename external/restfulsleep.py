@@ -1,24 +1,24 @@
 import requests
 from requests import Response
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 from api.constants import APIConstants, ValidatedDict
 
-class RestfulSleepAPI():
+class RestfulSleepAPI:
     RS_URL = None
-    RS_PSK = None
+    RS_PSK  = None
 
     @staticmethod
     def update_config(rs_config: Dict[str, Any]) -> None:
         server = rs_config.get('server', None)
-        if server == None:
+        if server is None:
             raise Exception("Failed to initialize rs 'server'")
         
         psk = rs_config.get('psk', None)
-        if psk == None:
+        if psk is None:
             raise Exception("Failed to initialize rs 'psk'")
         
         RestfulSleepAPI.RS_URL = server
-        RestfulSleepAPI.RS_PSK = psk
+        RestfulSleepAPI.RS_PSK  = psk
 
     @staticmethod
     def build_headers(token: str = None) -> dict:
@@ -28,65 +28,71 @@ class RestfulSleepAPI():
         if token:
             headers["Authorization"] = f"Bearer {token}"
         return headers
-
+    
     @staticmethod
-    def get_token_from_code(code: int) -> tuple[bool, Any]:
-        request_data = {
-            "code": code
-        }
-        response: Response = None
+    def _send_request(url: str, method: str, headers: dict, **kwargs) -> Tuple[bool, Any]:
         try:
-            response = requests.post(
-                f"{RestfulSleepAPI.RS_URL}/v1/oauth/token/unity",
-                json=request_data,
-                headers=RestfulSleepAPI.build_headers()
-            )
+            response = requests.request(method, url, headers=headers, **kwargs)
         except requests.RequestException as e:
-            return (False, APIConstants.badEnd(str(e)))
+            return False, APIConstants.badEnd(str(e))
         
         if not response:
-            return (False, APIConstants.badEnd('No response from RS'))
+            return False, APIConstants.badEnd('No response from RS')
         
-        responseData = ValidatedDict(response.json())
-        if responseData.get_str('status') != "success":
-            return (False, APIConstants.badEnd(f'RS Error: {responseData.get_str('error_code')}'))
+        return True, ValidatedDict(response.json())
+    
+    @staticmethod
+    def _process_response(data: ValidatedDict) -> Tuple[bool, Any]:
+        if data.get_str('status') != "success":
+            return False, APIConstants.badEnd(f'RS Error: {data.get_str("error_code")}')
         
-        data = responseData.get_dict('data')
+        return True, ValidatedDict(data.get_dict('data'))
+    
+    @classmethod
+    def get_token_from_code(cls, code: int) -> Tuple[bool, Any]:
+        request_data = {"code": code}
+        success, response = cls._send_request(f"{cls.RS_URL}/v1/oauth/token/unity", "POST", cls.build_headers(), json=request_data)
+        
+        if not success:
+            return success, response
+        
+        success, data = cls._process_response(response)
         token = data.get_str('token', None)
-        if not token:
-            return (False, APIConstants.badEnd('No token provided!'))
         user_id = data.get_int('userId', None)
-        if not user_id:
-            return (False, APIConstants.badEnd('No userId provided!'))
-        return (True, data)
-
-    @staticmethod
-    def delete_token(token: str) -> tuple[bool, Any]:
-        response: Response = None
-        try:
-            response = requests.delete(
-                f"{RestfulSleepAPI.RS_URL}/v1/oauth/token/unity",
-                headers=RestfulSleepAPI.build_headers(token)
-            )
-        except requests.RequestException as e:
-            return (False, APIConstants.badEnd(str(e)))
+        if not token or not user_id:
+            return False, APIConstants.badEnd('No token or userId provided!')
         
-        if not response:
-            return (False, APIConstants.badEnd('No response from RS'))
+        return success, data
+    
+    @classmethod
+    def delete_token(cls, token: str) -> Tuple[bool, Any]:
+        success, _ = cls._send_request(f"{cls.RS_URL}/v1/oauth/token/unity", "DELETE", cls.build_headers(token))
         
-        return (True, None)
-
-    @staticmethod
-    def get_user_from_token(token: str) -> tuple[bool, dict]:
-        response: Response = None
-        try:
-            response = requests.get(f"{RestfulSleepAPI.RS_URL}/v1/user?noScores=true", headers=RestfulSleepAPI.build_headers(token))
-        except requests.RequestException as e:
-            return (False, APIConstants.badEnd(str(e)))
+        return success, None
+    
+    @classmethod
+    def get_user_from_token(cls, token: str) -> Tuple[bool, ValidatedDict]:
+        success, response = cls._send_request(f"{cls.RS_URL}/v1/user?noScores=true", "GET", cls.build_headers(token))
         
-        responseData = ValidatedDict(response.json())
-        if responseData.get_str('status') != "success":
-            return (False, APIConstants.badEnd(f'RS Error: {responseData.get_str('error_code')}'))
+        if not success:
+            return success, response
         
-        data = responseData.get_dict('data')
-        return (True, data)
+        return cls._process_response(response)
+    
+    @classmethod
+    def get_user_from_id(cls, token: str, user_id: int) -> Tuple[bool, ValidatedDict]:
+        success, response = cls._send_request(f"{cls.RS_URL}/v1/user?noScores=true&userId={user_id}", "GET", cls.build_headers(token))
+        
+        if not success:
+            return success, response
+        
+        return cls._process_response(response)
+    
+    @classmethod
+    def get_user_from_name(cls, token: str, name: str) -> Tuple[bool, ValidatedDict]:
+        success, response = cls._send_request(f"{cls.RS_URL}/v1/user?noScores=true&username={name}", "GET", cls.build_headers(token))
+        
+        if not success:
+            return success, response
+        
+        return cls._process_response(response)

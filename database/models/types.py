@@ -16,17 +16,18 @@ class Team(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     owner: Mapped[int] = mapped_column(Integer, nullable=False)
-    data: Mapped[dict] = mapped_column(JSON, nullable=False, default={})
+    data: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     applications = relationship("Application", back_populates="team_rel")
-    members = relationship("TeamMember", back_populates="team_member_rel")
+    members = relationship("TeamMember", back_populates="team", cascade="all, delete-orphan")
+
 
 class TeamMember(Base):
-    __tablename__ = "team_member"
-    user_id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
-    team: Mapped[int] = mapped_column(
-        Integer, ForeignKey("team.id"), nullable=False
+    __tablename__ = "member"
+    user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    team_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("team.id"), primary_key=True
     )
-    team_member_rel = relationship("Team", back_populates="members")
+    team = relationship("Team", back_populates="members")
 
 class Application(Base):
     __tablename__ = "application"
