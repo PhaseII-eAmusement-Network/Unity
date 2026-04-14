@@ -9,3 +9,5 @@ SQLAlchemy
 psycopg2-binary
 alembic
 pycryptodome
+validators
+b2sdk

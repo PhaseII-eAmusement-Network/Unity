@@ -3,6 +3,7 @@ from api.constants import APIConstants
 from api.precheck import RequestPreCheck
 from api.data.endpoints.team import TeamData
 from api.data.endpoints.team_member import TeamMemberData
+from api.data.endpoints.application import ApplicationData
 from external.restfulsleep import RestfulSleepAPI
 
 class Team(Resource):
@@ -25,7 +26,19 @@ class Team(Resource):
         if not team:
             return APIConstants.badEnd('team not found')
         
-        if user_id != team['owner']:
+        owner_id = team['owner']
+
+        if owner_id != 0:
+            state, owner_data = RestfulSleepAPI.get_user_from_id(access_token, owner_id, True)
+            if not state:
+                return owner_data
+            team['ownerData'] = owner_data
+        else:
+            team['ownerData'] = {
+                'name': 'PhaseII'
+            }
+        
+        if user_id != owner_id:
             member = TeamMemberData.get_member_state(team_id, user_id)
             if not member:
                 admin_state, error = RequestPreCheck.check_admin(session)
@@ -36,12 +49,16 @@ class Team(Resource):
         if members:
             juiced_members = []
             for member in members:
-                state, member_data = RestfulSleepAPI.get_user_from_id(access_token, member)
+                state, member_data = RestfulSleepAPI.get_user_from_id(access_token, member, True)
                 if state:
                     member_data['email'] = None
                     member_data['data'] = None
                     juiced_members.append(member_data)
             team['members'] = juiced_members
+
+        applications = ApplicationData.get_all_apps(team_id)
+        if len(applications):
+            team['applications'] = applications
 
         return APIConstants.goodEnd(team)
 
@@ -63,7 +80,14 @@ class Team(Resource):
         if not team:
             return APIConstants.badEnd('team not found')
         
-        data_state, data = RequestPreCheck.checkData({'name': str, 'about':  str})
+        if user_id != team['owner']:
+            member = TeamMemberData.get_member_state(team_id, user_id)
+            if not member:
+                admin_state, error = RequestPreCheck.check_admin(session)
+                if not admin_state:
+                    return APIConstants.badEnd(error)
+        
+        data_state, data = RequestPreCheck.check_data({'name': str, 'about':  str})
         if not data_state:
             return APIConstants.badEnd('data not provided')
 
@@ -94,7 +118,7 @@ class NewTeam(Resource):
         if not sessionState:
             return session
         
-        data_state, data = RequestPreCheck.checkData({'name': str, 'about':  str})
+        data_state, data = RequestPreCheck.check_data({'name': str, 'about':  str})
         if not data_state:
             return APIConstants.badEnd('data not provided')
         

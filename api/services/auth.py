@@ -7,7 +7,7 @@ from external.restfulsleep import RestfulSleepAPI
 
 class OAuthCallback(Resource):
     def post(self):
-        (data_state, data) = RequestPreCheck.checkData({'code': int})
+        (data_state, data) = RequestPreCheck.check_data({'code': int})
         if not data_state:
             return APIConstants.badEnd('data not provided')
         
@@ -48,7 +48,7 @@ class AuthSession(Resource):
     def delete(self):
         session_state, session = RequestPreCheck.get_session()
         if not session_state:
-            return session
+            return APIConstants.goodEnd({})
         
         token_state, result = RestfulSleepAPI.delete_token(session.get_str('access_token'))
         if not token_state:

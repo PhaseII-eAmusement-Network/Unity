@@ -1,5 +1,4 @@
 import requests
-from requests import Response
 from typing import Dict, Any, Tuple
 from api.constants import APIConstants, ValidatedDict
 
@@ -80,8 +79,8 @@ class RestfulSleepAPI:
         return cls._process_response(response)
     
     @classmethod
-    def get_user_from_id(cls, token: str, user_id: int) -> Tuple[bool, ValidatedDict]:
-        success, response = cls._send_request(f"{cls.RS_URL}/v1/user?noScores=true&userId={user_id}", "GET", cls.build_headers(token))
+    def get_user_from_id(cls, token: str, user_id: int, min: bool = False) -> Tuple[bool, ValidatedDict]:
+        success, response = cls._send_request(f"{cls.RS_URL}/v1/user{'/minified' if min else ''}?noScores=true&userId={user_id}", "GET", cls.build_headers(token))
         
         if not success:
             return success, response
@@ -90,7 +89,7 @@ class RestfulSleepAPI:
     
     @classmethod
     def get_user_from_name(cls, token: str, name: str) -> Tuple[bool, ValidatedDict]:
-        success, response = cls._send_request(f"{cls.RS_URL}/v1/user?noScores=true&username={name}", "GET", cls.build_headers(token))
+        success, response = cls._send_request(f"{cls.RS_URL}/v1/user/minified?noScores=true&username={name}", "GET", cls.build_headers(token))
         
         if not success:
             return success, response

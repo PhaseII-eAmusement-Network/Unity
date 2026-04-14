@@ -1,6 +1,7 @@
 from flask import request
 from typing import Tuple
-from api.constants import APIConstants, ValidatedDict
+import validators
+from api.constants import APIConstants, AppIntents, ValidatedDict
 from api.data.endpoints.session import UserSession
 from external.restfulsleep import RestfulSleepAPI
 
@@ -29,7 +30,7 @@ class RequestPreCheck:
         
         return (True, None)
     
-    def checkData(keys: dict[str, type] = {}) -> Tuple[bool, ValidatedDict]:
+    def check_data(keys: dict[str, type] = {}) -> Tuple[bool, ValidatedDict]:
         '''
         Check if JSON data was sent. If found, return it as a ValidatedDict.
 
@@ -60,7 +61,7 @@ class RequestPreCheck:
 
         return True, data
     
-    def checkArgs(keys: dict[str, type] = {}) -> Tuple[bool, ValidatedDict]:
+    def check_args(keys: dict[str, type] = {}) -> Tuple[bool, ValidatedDict]:
         '''
         Check if args were sent. If found, return them as a ValidatedDict.
 
@@ -91,3 +92,28 @@ class RequestPreCheck:
 
         return True, data
     
+    def is_valid_url(url: str, force_https: bool = False) -> bool:
+        prefixes = ("http://", "https://")
+        if (force_https or APIConstants.FORCE_HTTPS_CALLBACKS):
+            prefixes = ("https://")
+
+        if not url.startswith(prefixes):
+            return False
+
+        if APIConstants.BYPASS_CALLBACK_VALIDATION:
+            return True
+
+        return validators.url(url)
+    
+    def validate_intents(intent_dict: dict):
+        if not isinstance(intent_dict, dict):
+            return False, "intents must be a dictionary"
+
+        for key, value in intent_dict.items():
+            if key not in AppIntents.INTENT_MAP:
+                return False, f"invalid intent: {key}"
+            
+            if not isinstance(value, bool):
+                return False, f"intent '{key}' must be boolean"
+
+        return True, None

@@ -1,5 +1,6 @@
 from typing import List
 from api.data.connection import SQLConnection
+from api.constants import ValidatedDict
 from database.models.types import Team
 
 class TeamData:
@@ -12,15 +13,15 @@ class TeamData:
             data = query.all()
             teams = []
             for team in data:
-                teams.append({
+                teams.append(ValidatedDict({
                     'id': team.id,
                     'name': team.name,
                     'owner': team.owner,
                     'data': team.data
-                })
+                }))
             return teams
         
-    def get_team(team_id: int) -> dict:
+    def get_team(team_id: int) -> ValidatedDict:
         with SQLConnection.SessionLocal() as session:
             query = session.query(Team).filter(Team.id == team_id)
 
@@ -33,7 +34,7 @@ class TeamData:
                     'owner': data.owner,
                     'data': data.data
                 }
-            return team
+            return ValidatedDict(team)
         
     def new_team(name: str, owner: int, data: dict) -> int:
         with SQLConnection.SessionLocal() as session:

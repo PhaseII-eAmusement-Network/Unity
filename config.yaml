@@ -1,3 +1,10 @@
+unity:
+  force_https_callbacks: False
+  bypass_callback_validation: False
+  
+upload:
+  max_content_length: 64
+
 flask:
   secret_key: "your_secure_key_here"
   secure_cookie: True
@@ -13,3 +20,8 @@ database:
 restfulsleep:
   server: 'http://localhost:2581'
   psk: 'restfulsleep_security_key'
+
+backblaze:
+  bucket-name: 
+  key-id: 
+  auth-key: 

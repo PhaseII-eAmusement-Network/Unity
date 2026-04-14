@@ -32,7 +32,7 @@ class TeamMember(Base):
 class Application(Base):
     __tablename__ = "application"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    team: Mapped[int] = mapped_column(
+    team_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("team.id"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
@@ -40,6 +40,7 @@ class Application(Base):
     oauth_enable: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )
+    intents: Mapped[int] = mapped_column(Integer, nullable=True)
     data: Mapped[dict] = mapped_column(JSON, nullable=False, default={})
     team_rel = relationship("Team", back_populates="applications")
     webhooks = relationship("Webhook", back_populates="application_rel")

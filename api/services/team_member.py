@@ -11,7 +11,7 @@ class TeamMember(Resource):
         if not session_state:
             return session
         
-        data_state, data = RequestPreCheck.checkData({'username': str})
+        data_state, data = RequestPreCheck.check_data({'username': str})
         if not data_state:
             return APIConstants.badEnd('data not provided')
         
@@ -51,7 +51,7 @@ class TeamMember(Resource):
         if not session_state:
             return session
         
-        data_state, data = RequestPreCheck.checkData({'userId': int})
+        data_state, data = RequestPreCheck.check_data({'userId': int})
         if not data_state:
             return APIConstants.badEnd('data not provided')
         

@@ -9,6 +9,17 @@ def intish(val: Any, base: int=10) -> Optional[int]:
         return None
 
 class APIConstants:
+    FORCE_HTTPS_CALLBACKS = False
+    BYPASS_CALLBACK_VALIDATION = False
+
+    @staticmethod
+    def update_config(unity_config: Dict[str, Any]) -> None:
+        force_https_callbacks = unity_config.get('force_https_callbacks', False)
+        APIConstants.FORCE_HTTPS_CALLBACKS = force_https_callbacks
+        
+        bypass_callback_validation = unity_config.get('bypass_callback_validation', False)
+        APIConstants.BYPASS_CALLBACK_VALIDATION = bypass_callback_validation
+
     def goodEnd(data: dict) -> dict:
         return {'status': 'success', 'error_code': None, 'data': data}
     
@@ -17,6 +28,51 @@ class APIConstants:
     
     def softEnd(error: str) -> dict:
         return {'status': 'warn', 'error_code': error}
+
+class AppIntents:
+    NETWORK = 1 << 0
+    READ_USER = 1 << 1
+    UPDATE_USER = 1 << 2
+    READ_PROFILES = 1 << 3
+    UPDATE_PROFILES = 1 << 4
+    READ_SCORES = 1 << 5
+    READ_ARCADE = 1 << 6
+    UPDATE_ARCADE = 1 << 7
+    WEBHOOK = 1 << 8
+
+    INTENT_MAP = {
+        "network": NETWORK,
+        "read_user": READ_USER,
+        "update_user": UPDATE_USER,
+        "read_profiles": READ_PROFILES,
+        "update_profiles": UPDATE_PROFILES,
+        "read_scores": READ_SCORES,
+        "read_arcade": READ_ARCADE,
+        "update_arcade": UPDATE_ARCADE,
+        "webhook": WEBHOOK,
+    }
+
+    def build_intents_bitmask(intent_dict: dict) -> int:
+        bitmask = 0
+
+        for key, enabled in intent_dict.items():
+            if key not in AppIntents.INTENT_MAP:
+                raise ValueError(f"Invalid intent: {key}")
+            
+            if enabled:
+                bitmask |= AppIntents.INTENT_MAP[key]
+
+        return bitmask
+    
+    def reverse_intents_bitmask(bitmask: int) -> dict:
+        intents_dict = {}
+        for intent_name, intent_value in AppIntents.INTENT_MAP.items():
+            if bitmask & intent_value:
+                intents_dict[intent_name] = True
+            else:
+                intents_dict[intent_name] = False
+        
+        return intents_dict
     
 class GameConstants:
     BEATSTREAM = 'bst'

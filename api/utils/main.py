@@ -5,16 +5,20 @@ from typing import Any, Dict
 import argparse
 import yaml
 
+from api.constants import APIConstants
+
 from api.data.connection import SQLConnection
+from api.data.upload import UploadData
 from api.data.endpoints.session import UserSession
 
 from api.services.auth import OAuthCallback, AuthSession
 from api.services.user import UserAccount
 from api.services.team import Team, NewTeam
 from api.services.team_member import TeamMember
-from api.services.application import Application
+from api.services.application import Application, NewApplication, ApplicationImage
 
 from external.restfulsleep import RestfulSleepAPI
+from external.backblaze import BackBlazeCDN
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -39,6 +43,8 @@ api.add_resource(Team, f'{uri_prefix}/team/<team_id>')
 api.add_resource(NewTeam, f'{uri_prefix}/team')
 api.add_resource(TeamMember, f'{uri_prefix}/team/<team_id>/member')
 api.add_resource(Application, f'{uri_prefix}/team/<team_id>/application/<app_id>')
+api.add_resource(ApplicationImage, f'{uri_prefix}/team/<team_id>/application/<app_id>/image')
+api.add_resource(NewApplication, f'{uri_prefix}/team/<team_id>/application')
 
 def load_configs(filename: str) -> None:
     global config
@@ -61,6 +67,9 @@ def load_configs(filename: str) -> None:
         'restfulsleep': RestfulSleepAPI.update_config,
         'flask': UserSession.update_config,
         'crypto': UserSession.update_crypto_config,
+        'unity': APIConstants.update_config,
+        'backblaze': BackBlazeCDN.update_config,
+        'upload': UploadData.update_config,
     }
 
     for key, updater in config_map.items():
@@ -76,6 +85,10 @@ def main() -> None:
 
     print("Starting Unity")
     load_configs(args.config)
+
+    if APIConstants.BYPASS_CALLBACK_VALIDATION:
+        print("\n\nUnity config warning!!!\n`bypass_callback_validation` has been enabled in your config.\nDO NOT RUN THIS IN PRODUCTION!")
+
     app.run(host='0.0.0.0', port=args.port, debug=True)
 
 if __name__ == '__main__':
