@@ -21,7 +21,7 @@ class OAuthCallback(Resource):
             if not token_state:
                 return token_data
         except Exception as e:
-            return APIConstants.badEnd(e)
+            return APIConstants.badEnd(str(e))
         
         session_token = UserSession.create_session(token_data.get_int('userId'), token_data.get_str('token'))
         

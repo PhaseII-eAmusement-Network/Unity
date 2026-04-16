@@ -56,12 +56,12 @@ class RestfulSleepAPI:
             return success, response
         
         success, data = cls._process_response(response)
-        token = data.get_str('token', None)
-        user_id = data.get_int('userId', None)
+        token = data.get('token', None)
+        user_id = data.get('userId', None)
         if not token or not user_id:
             return False, APIConstants.badEnd('No token or userId provided!')
         
-        return success, data
+        return success, ValidatedDict(data)
     
     @classmethod
     def delete_token(cls, token: str) -> Tuple[bool, Any]:
