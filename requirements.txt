@@ -11,3 +11,4 @@ alembic
 pycryptodome
 validators
 b2sdk
+passlib

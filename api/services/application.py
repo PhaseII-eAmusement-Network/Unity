@@ -5,6 +5,7 @@ from api.constants import APIConstants, AppIntents, ValidatedDict
 from api.precheck import RequestPreCheck
 from api.data.data import BaseData
 from api.data.upload import UploadData
+from api.data.endpoints.session import UserSession
 from api.data.endpoints.team import TeamData
 from api.data.endpoints.team_member import TeamMemberData
 from api.data.endpoints.application import ApplicationData
@@ -12,8 +13,8 @@ from external.backblaze import BackBlazeCDN
 
 class Application(Resource):
     def get(self, team_id, app_id):
-        sessionState, session = RequestPreCheck.get_session()
-        if not sessionState:
+        session_state, session = RequestPreCheck.get_session()
+        if not session_state:
             return session
 
         user_id = session.get_int('id')
@@ -49,8 +50,8 @@ class Application(Resource):
         return APIConstants.goodEnd(app)
     
     def post(self, team_id, app_id):
-        sessionState, session = RequestPreCheck.get_session()
-        if not sessionState:
+        session_state, session = RequestPreCheck.get_session()
+        if not session_state:
             return session
         
         user_id = session.get_int('id')
@@ -98,7 +99,7 @@ class Application(Resource):
         new_data = {}
         if oauth_enable:
             callback_uri = req_app_data.get_str('callbackUri')
-            if not len(new_about):
+            if not len(callback_uri):
                 return APIConstants.badEnd('no callbackUri provided')
             
             if not RequestPreCheck.is_valid_url(callback_uri):
@@ -128,15 +129,22 @@ class Application(Resource):
             app_data
         )
 
+        client_secret = None
+        try:
+            result, client_secret = result
+            client_secret = UserSession.AES.encrypt(client_secret)
+        except:
+            pass
+
         if result:
-            return APIConstants.goodEnd({})
+            return APIConstants.goodEnd({'clientSecret': client_secret})
         else:
             return APIConstants.badEnd('Failed to update app!')
 
 class NewApplication(Resource):
     def put(self, team_id):
-        sessionState, session = RequestPreCheck.get_session()
-        if not sessionState:
+        session_state, session = RequestPreCheck.get_session()
+        if not session_state:
             return session
         
         data_state, data = RequestPreCheck.check_data({'name': str, 'about':  str, 'useOAuth': bool, 'useWebhooks': bool})
@@ -165,27 +173,51 @@ class NewApplication(Resource):
 
         app_data = ValidatedDict({})
         oauth_enable = data.get_bool('useOAuth')
+        intent_bits = None
         if oauth_enable:
-            app_data.replace_str('callbackUri', data.get_str('callbackUri'))
+            callback_uri = data.get_str('callbackUri')
+            if not len(callback_uri):
+                return APIConstants.badEnd('no callbackUri provided')
+            
+            if not RequestPreCheck.is_valid_url(callback_uri):
+                return APIConstants.badEnd('callbackUri provided isn\'t valid' )
+            app_data.replace_str('callbackUri', callback_uri)
 
-        app_id = ApplicationData.new_app(
+            req_intents = data.get('intents', None)
+            if req_intents:
+                valid, error = RequestPreCheck.validate_intents(req_intents)
+                if not valid:
+                    return APIConstants.badEnd(error)
+                intent_bits = AppIntents.build_intents_bitmask(req_intents)
+
+        result = ApplicationData.new_app(
             team_id,
             data.get_str('name'),
             data.get_str('about'),
             oauth_enable,
+            intent_bits,
             app_data,
         )
-        if not app_id:
+        if not result:
             return APIConstants.badEnd('Failed to save app!')
-        
+
+        client_secret = None
+        app_id = result
+        try:
+            app_id, client_secret = result
+            client_secret = UserSession.AES.encrypt(client_secret)
+        except:
+            pass
+
         return APIConstants.goodEnd({
             'appId': app_id,
+            'clientSecret': client_secret,
         })
     
 class ApplicationImage(Resource):
     def post(self, team_id, app_id):
-        sessionState, session = RequestPreCheck.get_session()
-        if not sessionState:
+        session_state, session = RequestPreCheck.get_session()
+        if not session_state:
             return session
         
         user_id = session.get_int('id')

@@ -40,6 +40,8 @@ class Application(Base):
     oauth_enable: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )
+    oauth_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=True, index=True)
+    client_secret: Mapped[str] = mapped_column(String(255), nullable=True)
     intents: Mapped[int] = mapped_column(Integer, nullable=True)
     data: Mapped[dict] = mapped_column(JSON, nullable=False, default={})
     team_rel = relationship("Team", back_populates="applications")

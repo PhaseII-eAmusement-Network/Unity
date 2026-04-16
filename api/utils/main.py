@@ -12,6 +12,7 @@ from api.data.upload import UploadData
 from api.data.endpoints.session import UserSession
 
 from api.services.auth import OAuthCallback, AuthSession
+from api.services.oauth import OAuthApplication, OAuthCheck
 from api.services.user import UserAccount
 from api.services.team import Team, NewTeam
 from api.services.team_member import TeamMember
@@ -37,6 +38,8 @@ def root():
     return "Unity is running!"
 
 api.add_resource(OAuthCallback, f'{uri_prefix}/oauth/callback')
+api.add_resource(OAuthApplication, f'{uri_prefix}/oauth/app')
+api.add_resource(OAuthCheck, f'{uri_prefix}/oauth/app/check/<oauth_id>')
 api.add_resource(AuthSession, f'{uri_prefix}/auth/session')
 api.add_resource(UserAccount, f'{uri_prefix}/user')
 api.add_resource(Team, f'{uri_prefix}/team/<team_id>')

@@ -8,8 +8,8 @@ from external.restfulsleep import RestfulSleepAPI
 
 class Team(Resource):
     def get(self, team_id):
-        sessionState, session = RequestPreCheck.get_session()
-        if not sessionState:
+        session_state, session = RequestPreCheck.get_session()
+        if not session_state:
             return session
         
         user_id = session.get_int('id')
@@ -63,8 +63,8 @@ class Team(Resource):
         return APIConstants.goodEnd(team)
 
     def post(self, team_id):
-        sessionState, session = RequestPreCheck.get_session()
-        if not sessionState:
+        session_state, session = RequestPreCheck.get_session()
+        if not session_state:
             return session
         
         user_id = session.get_int('id')
@@ -114,8 +114,8 @@ class Team(Resource):
 
 class NewTeam(Resource):
     def put(self):
-        sessionState, session = RequestPreCheck.get_session()
-        if not sessionState:
+        session_state, session = RequestPreCheck.get_session()
+        if not session_state:
             return session
         
         data_state, data = RequestPreCheck.check_data({'name': str, 'about':  str})

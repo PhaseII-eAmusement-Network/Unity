@@ -8,8 +8,8 @@ from external.restfulsleep import RestfulSleepAPI
 
 class UserAccount(Resource):
     def get(self):
-        sessionState, session = RequestPreCheck.get_session()
-        if not sessionState:
+        session_state, session = RequestPreCheck.get_session()
+        if not session_state:
             return session
         
         (user_state, user_data) = RestfulSleepAPI.get_user_from_token(session.get_str("access_token"))

@@ -9,6 +9,9 @@ class RequestPreCheck:
     def get_session() -> Tuple[bool, ValidatedDict]:
         token = request.cookies.get('Unity-Auth-Key')
         if not token:
+            auth = RequestPreCheck.get_authorization()
+            if auth:
+                return auth
             return (False, APIConstants.softEnd('No Unity-Auth-Key provided!'))
         
         session = UserSession.check_session(token)
@@ -16,6 +19,18 @@ class RequestPreCheck:
             return (False, APIConstants.badEnd('No session found!'))
         session['token'] = token
         return (True, session)
+    
+    def get_authorization() -> Tuple[bool, ValidatedDict]:
+        rs_key = None
+        try:
+            rs_key = request.headers['X-RS-Key']
+        except Exception as e:
+            return (False, APIConstants.badEnd(str(e)))
+        
+        if rs_key:
+            if rs_key != RestfulSleepAPI.RS_PSK:
+                return (False, APIConstants.softEnd('X-RS-Key provided is incorrect'))
+            return (True, ValidatedDict({'id': 0, 'appId': 'rs'}))
     
     def check_admin(session: ValidatedDict) -> Tuple[bool, ValidatedDict]:
         '''
