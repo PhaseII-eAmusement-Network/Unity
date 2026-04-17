@@ -26,17 +26,21 @@ class CleanExtCommand(Command):
 
 setup(
     name='Unity Backend API',
-    version='0.1',
+    version='1.0',
     description="Webhook host server and developer network",
     author='PhaseII Team',
     license='Apache 2.0',
     packages=[
-        # Core packages
         'api',
-        
-        # Wrapper scripts, utilities and associated code.
+        'api.data',
+        'api.data.endpoints',
+        'api.services',
         'api.utils',
-
+        'database',
+        'database.migrations',
+        'database.migrations.versions',
+        'database.models',
+        'external',
     ],
     install_requires=[
         req for req in open('requirements.txt').read().split('\n') if len(req) > 0
